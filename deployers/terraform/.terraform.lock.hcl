@@ -2,8 +2,10 @@
 # Manual edits may be lost in future updates.
 
 provider "registry.terraform.io/hashicorp/azuread" {
-  version = "3.4.0"
+  version     = "3.4.0"
+  constraints = ">= 3.4.0"
   hashes = [
+    "h1:CkN8DpmNYWU9mvlrmOpzFdPofGjKgrnL8leImrSL9Uk=",
     "h1:rfO7hSYJLdpff/s2iuooHtxNacwKq5n03IwvVQ+xbSI=",
     "zh:035a6d6e6aa7f117969702873c27344ec4ddd88f676cebc1088316fb26d5c95a",
     "zh:11f86935174d8223699cae00b3a705ded1d75a4efb6d4723d3788f5446e1eaa5",
@@ -21,8 +23,10 @@ provider "registry.terraform.io/hashicorp/azuread" {
 }
 
 provider "registry.terraform.io/hashicorp/azurerm" {
-  version = "4.29.0"
+  version     = "4.29.0"
+  constraints = ">= 4.29.0, < 5.0.0"
   hashes = [
+    "h1:c9tmtEdVTb9siGa3hVxPrMVl9ij5zijnD02JMHcHjrE=",
     "h1:jC2GJo4VzTKnKociUDLVv8/+u9Mz+4scZrqbEasV+Y0=",
     "zh:16590eea68c7c8aedb7af19f690eb34ab6636ef417b3fa9e06ca038fdb4c44b8",
     "zh:1c907dfe44d00a54aa63d443004add90188f9a53ef3e919aff8aba92f715f42b",
@@ -44,6 +48,7 @@ provider "registry.terraform.io/hashicorp/random" {
   constraints = ">= 3.1.0"
   hashes = [
     "h1:0hcNr59VEJbhZYwuDE/ysmyTS0evkfcLarlni+zATPM=",
+    "h1:356j/3XnXEKr9nyicLUufzoF4Yr6hRy481KIxRVpK0c=",
     "zh:14829603a32e4bc4d05062f059e545a91e27ff033756b48afbae6b3c835f508f",
     "zh:1527fb07d9fea400d70e9e6eb4a2b918d5060d604749b6f1c361518e7da546dc",
     "zh:1e86bcd7ebec85ba336b423ba1db046aeaa3c0e5f921039b3f1a6fc2f978feab",
