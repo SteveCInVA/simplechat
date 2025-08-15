@@ -1,9 +1,9 @@
 name: SimpleChat Infrastructure Deployment
 
 on:
-  #push:
-  #  branches:
-  #  - main
+  push:
+    branches:
+    - main
   workflow_dispatch:
 
 jobs:
@@ -25,7 +25,12 @@ jobs:
           TFSTATE_RESOURCE_GROUP_NAME: ${{ vars.TFSTATE_RESOURCE_GROUP_NAME }}
           TFSTATE_STORAGE_ACCOUNT_NAME: ${{ vars.TFSTATE_STORAGE_ACCOUNT_NAME }}
           TFSTATE_STORAGE_CONTAINER: ${{ vars.TFSTATE_STORAGE_CONTAINER }}
-        run: echo "Environment variables set"
+        run: |
+          echo "Environment variables set"
+          echo "TFSTATE_AZURE_LOCATION: $TFSTATE_AZURE_LOCATION"
+          echo "TFSTATE_RESOURCE_GROUP_NAME: $TFSTATE_RESOURCE_GROUP_NAME"
+          echo "TFSTATE_STORAGE_ACCOUNT_NAME: $TFSTATE_STORAGE_ACCOUNT_NAME"
+          echo "TFSTATE_STORAGE_CONTAINER: $TFSTATE_STORAGE_CONTAINER"
 
       - name: Bootstrap script
         run: |
@@ -45,8 +50,8 @@ jobs:
         run: terraform validate
         working-directory: ./deployers/terraform
 
-      - name: Terraform Plan
-        run: terraform plan -out=tfplan
-        working-directory: ./deployers/terraform
+      #- name: Terraform Plan
+      #  run: terraform plan -out=tfplan
+      #  working-directory: ./deployers/terraform
 
 
