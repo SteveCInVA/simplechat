@@ -1,0 +1,36 @@
+name: SimpleChat Infrastructure Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Azure CLI
+        uses: azure/setup-cli@v1
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Bootstrap script
+        run: |
+          chmod +x ./deployers/terraform/bootstrap_tfstate.sh
+          ./deployers/terraform/bootstrap_tfstate.sh
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Initialize Terraform
+        run: terraform init -backend-config=./deployers/terraform/backend.config
+
