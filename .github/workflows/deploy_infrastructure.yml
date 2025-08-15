@@ -40,6 +40,14 @@ jobs:
       - name: Change working directory
         run: cd ./deployers/terraform
 
+      - name: Show current directory and list files
+        run: |
+          echo "Current directory:"
+          pwd
+
+          echo "Files in directory:"
+          ls -al
+
       - name: Initialize Terraform
         run: terraform init -backend-config=backend.config
 
