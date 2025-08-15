@@ -37,23 +37,16 @@ jobs:
         with:
           terraform_version: 1.6.6
 
-      - name: Change working directory
-        run: cd ./deployers/terraform
-
-      - name: Show current directory and list files
-        run: |
-          echo "Current directory:"
-          pwd
-
-          echo "Files in directory:"
-          ls -al
-
       - name: Initialize Terraform
         run: terraform init -backend-config=backend.config
+        working-directory: ./deployers/terraform        
 
       - name: Validate Terraform
         run: terraform validate
+        working-directory: ./deployers/terraform
 
       - name: Terraform Plan
         run: terraform plan -out=tfplan
+        working-directory: ./deployers/terraform
+
 
