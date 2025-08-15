@@ -48,173 +48,22 @@ if ($existingApp.Count -gt 0) {
     exit
 }
 
-# Create Azure AD Application
-$tempDir = [System.IO.Path]::GetTempPath()
+# Create Azure AD Service Principal
+Write-Host "Creating Azure AD Service Principal for $AppName..."
 
-# Determine the cloud environment
-$cloud = az cloud show | ConvertFrom-Json
-$cloudName = $cloud.name
-$instance = if ($cloudName -eq "AzureUSGovernment") {
-    "https://login.microsoftonline.us/"
-} else {
-    "https://login.microsoftonline.com/"
-}
+$subscriptionId = az account show --query id -o tsv
+$sp = az ad sp create-for-rbac --name $AppName --role contributor --scopes /subscriptions/$subscriptionId
 
-# Get the tenant ID directly from the signed-in user's context
-$TenantId = az account show --query 'tenantId' -o tsv
-
-# Get the domain from the tenant
-$Domain = az rest --method GET --uri "https://graph.microsoft.com/v1.0/domains" --query "value[0].id" -o tsv
-
-Write-Host "Creating Azure AD application..."
-$App = az ad app create `
-  --display-name $AppName `
-  --enable-access-token-issuance false `
-  --enable-id-token-issuance true `
- | ConvertFrom-Json
-
-$AppId = $App.appId
-$ObjectId = $App.id
-
-# Create a service principal for the application
-$sp = az ad sp create --id $AppId | ConvertFrom-Json
-$spObjectId = $sp.id
-Write-Host "Service principal created."
-
-# Set the executing user as the owner of the App Registration
-$userId = az ad signed-in-user show --query "id" -o tsv
-az ad app owner add --id $ObjectId --owner-object-id $userId
-Write-Host "Executing user set as Owner of the App Registration."
-
-<#
-Write-Host "Setting web redirect URIs..."
-$webRedirectUris = @(
-    "https://localhost/signin-oidc"
-)
-az ad app update --id $ObjectId `
-    --web-redirect-uris $webRedirectUris
-Write-Host "Web redirect URIs set."
-
-Write-Host "Setting application roles..."
-$appRoles = @'
-[
-  {
-    "allowedMemberTypes": [
-      "User"
-    ],
-    "description": "Members of this role can generate documents",
-    "displayName": "DocumentGeneration",
-    "id": "4872d356-5745-421f-b153-0c6a80971173",
-    "isEnabled": true,
-    "value": "DocumentGeneration"
-  }
-]
-'@
-#$appRolesFile = Join-Path $tempDir "appRoles.json"
-#$appRoles | Out-File -FilePath $appRolesFile -Encoding utf8
-#az ad app update --id $ObjectId --app-roles @$appRolesFile
-#Write-Host "Application roles set."
-
-#Write-Host "Assigning DocumentGeneration role to the executing user..."
-#$roleAssignmentId = az ad sp show --id $spObjectId | ConvertFrom-Json |
-#                    Select-Object -ExpandProperty appRoles | 
-#                    Where-Object { $_.value -eq 'DocumentGeneration' } | 
-#                    Select-Object -ExpandProperty id
-
-# Create JSON payload for app role assignment
-$assignmentPayload = @"
-{
-    "principalId": "$userId",
-    "resourceId": "$spObjectId",
-    "appRoleId": "$roleAssignmentId"
-}
-"@
-$assignmentPayloadFile = Join-Path $tempDir "assignmentPayload.json"
-$assignmentPayload | Out-File -FilePath $assignmentPayloadFile -Encoding utf8
-
-az rest --method POST --uri "https://graph.microsoft.com/v1.0/users/$userId/appRoleAssignments" `
-        --headers "Content-Type=application/json" `
-        --body @$assignmentPayloadFile > $null
-Write-Host "DocumentGeneration role assigned to the executing user."
-
-Write-Host "Setting Application ID URI..."
-$identifierUri = "api://$AppId"
-az ad app update --id $ObjectId --identifier-uris "$identifierUri"
-Write-Host "Application ID URI set."
-
-Write-Host "Setting API scopes..."
-$apiScopeId = [guid]::NewGuid().Guid
-$apiScopeJson = @"
-{
-    "requestedAccessTokenVersion": 2,
-    "oauth2PermissionScopes": [
-        {
-            "adminConsentDescription": "Allows the app to access the web API on behalf of the signed-in user",
-            "adminConsentDisplayName": "Access the API on behalf of a user",
-            "id": "$apiScopeId",
-            "isEnabled": true,
-            "type": "User",
-            "userConsentDescription": "Allows this app to access the web API on your behalf",
-            "userConsentDisplayName": "Access the API on your behalf",
-            "value": "access_as_user"
-        }
-    ]
-}
-"@
-$apiScopesFile = Join-Path $tempDir "apiScopes.json"
-$apiScopeJson | Out-File -FilePath $apiScopesFile -Encoding utf8
-az ad app update --id $ObjectId --set api=@$apiScopesFile
-Write-Host "API scopes set."
-
-Write-Host "Setting required resource access..."
-$requiredResourceAccessJson = @"
-[
-  {
-    "resourceAppId": "$AppId",
-    "resourceAccess": [
-      {
-        "id": "$apiScopeId",
-        "type": "Scope"
-      }
-    ]
-  }
-]
-"@
-$requiredResourceAccessJson = $requiredResourceAccessJson -replace '\$AppId', $AppId -replace '\$apiScopeId', $apiScopeId
-$requiredResourceAccessFile = Join-Path $tempDir "requiredResourceAccess.json"
-$requiredResourceAccessJson | Out-File -FilePath $requiredResourceAccessFile -Encoding utf8
-az ad app update --id $ObjectId --required-resource-accesses @$requiredResourceAccessFile
-Write-Host "Required resource access set."
-#>
-Write-Host "Generating client secret..."
-$clientSecret = az ad app credential reset `
-    --id $AppId `
-    --append `
-    --display-name "Default" `
-    --end-date (Get-Date).AddYears(2).ToString("yyyy-MM-dd") `
-    | ConvertFrom-Json
-$ClientSecret = $clientSecret.password
-Write-Host "Client secret generated."
-
-# Cleanup temporary files
-#Remove-Item $appRolesFile -Force
-#Remove-Item $apiScopesFile -Force
-#Remove-Item $requiredResourceAccessFile -Force
-#Remove-Item $assignmentPayloadFile -Force
-
-Write-Host "Script execution completed."
-
-# Output the relevant settings in the requested format
 $outputJson = @{
-    Instance = $instance
-    Domain = $Domain
-    TenantId = $TenantId
-    ClientId = $AppId
-    ClientSecret = $ClientSecret
-#    CallbackPath = "/signin-oidc"
-#    Scopes = "api://$AppId/access_as_user"
+    clientSecret = $sp.password
+    subscriptionId = $subscriptionId
+    tenantId = $sp.tenantId
+    clientId = $sp.appId
 } | ConvertTo-Json -Compress
 
+
+# Generate the output JSON
+Write-Host "***************************************************************************"
 Write-Host "Set the GitHub secret AZURE_CREDENTIALS in your fork of the repo to the following JSON:"
 Write-Host "This is not possible to retrieve at a later stage, so please save it now."
 Write-Host "The GitHub secret is also not possible to retrieve after you've set it, so take note of it somewhere else as well, if you need to."
