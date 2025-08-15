@@ -37,8 +37,11 @@ jobs:
         with:
           terraform_version: 1.6.6
 
+      - name: Change working directory
+        run: cd ./deployers/terraform
+
       - name: Initialize Terraform
-        run: terraform init -backend-config=./deployers/terraform/backend.config
+        run: terraform init -backend-config=backend.config
 
       - name: Validate Terraform
         run: terraform validate

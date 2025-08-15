@@ -52,12 +52,12 @@ if ($existingApp.Count -gt 0) {
 Write-Host "Creating Azure AD Service Principal for $AppName..."
 
 $subscriptionId = az account show --query id -o tsv
-$sp = az ad sp create-for-rbac --name $AppName --role contributor --scopes /subscriptions/$subscriptionId
+$sp = az ad sp create-for-rbac --name $AppName --role contributor --scopes /subscriptions/$subscriptionId | ConvertFrom-Json
 
 $outputJson = @{
     clientSecret = $sp.password
     subscriptionId = $subscriptionId
-    tenantId = $sp.tenantId
+    tenantId = $sp.tenant
     clientId = $sp.appId
 } | ConvertTo-Json -Compress
 
