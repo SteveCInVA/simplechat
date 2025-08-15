@@ -9,7 +9,13 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
-    
+
+    env:
+      TFSTATE_AZURE_LOCATION: ${{ vars.TFSTATE_AZURE_LOCATION }}
+      TFSTATE_RESOURCE_GROUP_NAME: ${{ vars.TFSTATE_RESOURCE_GROUP_NAME }}
+      TFSTATE_STORAGE_ACCOUNT_NAME: ${{ vars.TFSTATE_STORAGE_ACCOUNT_NAME }}
+      TFSTATE_STORAGE_CONTAINER: ${{ vars.TFSTATE_STORAGE_CONTAINER }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -18,19 +24,6 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Set environment variables from repo
-        env:
-          TFSTATE_AZURE_LOCATION: ${{ vars.TFSTATE_AZURE_LOCATION }}
-          TFSTATE_RESOURCE_GROUP_NAME: ${{ vars.TFSTATE_RESOURCE_GROUP_NAME }}
-          TFSTATE_STORAGE_ACCOUNT_NAME: ${{ vars.TFSTATE_STORAGE_ACCOUNT_NAME }}
-          TFSTATE_STORAGE_CONTAINER: ${{ vars.TFSTATE_STORAGE_CONTAINER }}
-        run: |
-          echo "Environment variables set"
-          echo "TFSTATE_AZURE_LOCATION: $TFSTATE_AZURE_LOCATION"
-          echo "TFSTATE_RESOURCE_GROUP_NAME: $TFSTATE_RESOURCE_GROUP_NAME"
-          echo "TFSTATE_STORAGE_ACCOUNT_NAME: $TFSTATE_STORAGE_ACCOUNT_NAME"
-          echo "TFSTATE_STORAGE_CONTAINER: $TFSTATE_STORAGE_CONTAINER"
 
       - name: Bootstrap script
         run: |
