@@ -4,7 +4,7 @@
 LOCATION="${TFSTATE_AZURE_LOCATION:-northcentralus}"
 RESOURCE_GROUP="${TFSTATE_RESOURCE_GROUP_NAME:-stecarrsimplechat-shared-rg}"
 STORAGE_ACCOUNT="${TFSTATE_STORAGE_ACCOUNT_NAME:-stecarrsimplechatstate01}"
-CONTAINER_NAME="${TFSTATE_STORAGE_CONTAINER:-tfstate}"
+CONTAINER_NAME="${TFSTATE_STORAGE_CONTAINER:-localdev}"
 STATE_FILE="simplechat.terraform.tfstate"
 
 # Create the resource group
