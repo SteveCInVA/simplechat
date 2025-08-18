@@ -84,8 +84,9 @@ locals {
   search_service_name         = "${var.param_base_name}-${var.param_environment}-search"
   storage_account_base        = "${var.param_base_name}${var.param_environment}sa"
   storage_account_name        = substr(replace(local.storage_account_base, "/[^a-z0-9]/", ""), 0, 24)
-  acr_base_url                = "${var.acr_name}.azurecr.us" # Script has this hardcoded for US Gov
-  param_registry_server       = "https://${var.acr_name}.azurecr.us" # Script has this hardcoded for US Gov
+  #acr_base_url                = "${var.acr_name}.azurecr.us" # Script has this hardcoded for US Gov
+
+  param_registry_server   = var.global_which_azure_platform == "AzureUSGovernment" ? "https://${var.acr_name}.azurecr.us" : "https://${var.acr_name}.azurecr.io"
 
   app_service_fqdn_suffix = var.global_which_azure_platform == "AzureUSGovernment" ? ".azurewebsites.us" : ".azurewebsites.net"
   graph_url               = var.global_which_azure_platform == "AzureUSGovernment" ? "https://graph.microsoft.us" : "https://graph.microsoft.com"
@@ -265,7 +266,7 @@ resource "azurerm_linux_web_app" "app" {
   resource_group_name = azurerm_resource_group.rg.name
   service_plan_id     = azurerm_service_plan.asp.id
   ftp_publish_basic_authentication_enabled = false
-  webdeploy_publish_basic_authentication_enabled = true
+  webdeploy_publish_basic_authentication_enabled = false  
 
   # auth_settings {
   #     enabled                 = true
