@@ -8,7 +8,8 @@
 		"ghcr.io/devcontainers/features/python:1": {},
 		"ghcr.io/devcontainers-extra/features/black:2": {},
 		"ghcr.io/devcontainers/features/azure-cli:1": {},
-		"ghcr.io/devcontainers/features/terraform:1": {}
+		"ghcr.io/devcontainers/features/terraform:1": {},
+		"ghcr.io/devcontainers/features/powershell:1": {}
 	},
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -24,7 +25,8 @@
 				"ms-python.black-formatter",
 				"ms-azuretools.vscode-azureterraform",
 				"ms-vscode.azurecli",
-				"HashiCorp.terraform"
+				"HashiCorp.terraform",
+				"ms-vscode.powershell"
 			]
 		}
 	}
