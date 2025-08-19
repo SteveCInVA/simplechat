@@ -68,7 +68,9 @@ jobs:
         working-directory: ./deployers/terraform
 
       - name: Terraform Plan
-        run: terraform plan -out=tfplan
+        run: terraform plan -out=tfplan -input=false
         working-directory: ./deployers/terraform
+
+
 
 
