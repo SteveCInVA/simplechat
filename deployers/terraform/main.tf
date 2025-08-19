@@ -192,7 +192,7 @@ resource "azurerm_key_vault" "kv" {
   # The script attempts to get current user's object ID for initial permissions
   # In Terraform, we can assign roles after creation.
   enable_rbac_authorization = true
-
+  
   tags = local.common_tags
 }
 
@@ -206,6 +206,24 @@ resource "azurerm_role_assignment" "kv_secrets_officer_current_user" {
   principal_id         = data.azuread_client_config.current.object_id
 }
 
+resource "azurerm_monitor_diagnostic_setting" "kv_monitor" {
+  name = "diag-${azurerm_key_vault.kv.name}"
+  target_resource_id = azurerm_key_vault.kv.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.la.id
+
+  enabled_log {
+    category_group = "audit"
+  }
+
+  enabled_log {
+    category_group = "allLogs"
+  }
+
+  enabled_metric {
+    category = "AllMetrics"
+  }
+
+}
 
 # --- Application Insights ---
 resource "azurerm_application_insights" "ai" {
@@ -216,6 +234,22 @@ resource "azurerm_application_insights" "ai" {
   workspace_id        = azurerm_log_analytics_workspace.la.id
   tags                = local.common_tags
 }
+
+resource "azurerm_monitor_diagnostic_setting" "ai_monitor" {
+  name = "diag-${azurerm_application_insights.ai.name}"
+  target_resource_id = azurerm_application_insights.ai.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.la.id
+
+  enabled_log {
+    category_group = "allLogs"
+  }
+
+  enabled_metric {
+    category = "AllMetrics"
+  }
+}
+
+
 
 # --- Storage Account ---
 resource "azurerm_storage_account" "sa" {
@@ -229,6 +263,24 @@ resource "azurerm_storage_account" "sa" {
   access_tier              = "Hot"
   public_network_access_enabled = false # From script's allow-blob-public-access false
   tags                     = local.common_tags
+}
+
+resource "azurerm_monitor_diagnostic_setting" "sa_monitor" {
+  name = "diag-${azurerm_storage_account.sa.name}-blob"
+  target_resource_id = "${azurerm_storage_account.sa.id}/blobServices/default"
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.la.id
+
+  enabled_log {
+    category_group = "audit"
+  }
+
+  enabled_log {
+    category_group = "allLogs"
+  }
+
+  enabled_metric {
+    category = "Transaction"
+  }
 }
 
 # --- User-Assigned Managed Identity ---
@@ -257,6 +309,16 @@ resource "azurerm_service_plan" "asp" {
   # "I1" "I2" "I3" "I1v2" "I2v2" "I3v2" "I4v2" "I5v2" "I6v2" "I1mv2" "I2mv2" 
   # "I3mv2" "I4mv2" "I5mv2" "D1" "SHARED" "WS1" "WS2" "WS3"]
   tags                = local.common_tags
+}
+
+resource "azurerm_monitor_diagnostic_setting" "asp_monitor" {
+  name = "diag-${azurerm_service_plan.asp.name}"
+  target_resource_id = azurerm_service_plan.asp.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.la.id
+
+  enabled_metric {
+    category = "AllMetrics"
+  }
 }
 
 # --- App Service (Web App) ---
@@ -360,6 +422,54 @@ resource "azurerm_linux_web_app" "app" {
 
   tags = local.common_tags
 }
+
+resource "azurerm_monitor_diagnostic_setting" "app_monitor" {
+  name = "diag-${azurerm_linux_web_app.app.name}"
+  target_resource_id = azurerm_linux_web_app.app.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.la.id
+
+  enabled_log {
+    category = "AppServiceAntivirusScanAuditLogs"
+  }
+
+  enabled_log {
+    category = "AppServiceHTTPLogs"
+  }
+
+  enabled_log {
+    category = "AppServiceConsoleLogs"
+  }  
+
+  enabled_log {
+    category = "AppServiceAppLogs"
+  }
+
+  enabled_log {
+    category = "AppServiceFileAuditLogs"
+  }
+
+  enabled_log {
+    category = "AppServiceAuditLogs"
+  }  
+
+  enabled_log {
+    category = "AppServiceIPSecAuditLogs"
+  }
+
+  enabled_log {
+    category = "AppServicePlatformLogs"
+  }
+
+  enabled_log {
+    category = "AppServiceAuthenticationLogs"
+  }  
+
+  enabled_metric {
+    category = "AllMetrics"
+  }
+
+}
+
 
 # --- Entra App Registration & Service Principal ---
 resource "azuread_application" "app_registration" {
@@ -530,6 +640,20 @@ resource "azurerm_cosmosdb_account" "cosmos" {
   tags = local.common_tags
 }
 
+resource "azurerm_monitor_diagnostic_setting" "cosmos_monitor" {
+  name = "diag-${azurerm_cosmosdb_account.cosmos.name}"
+  target_resource_id = azurerm_cosmosdb_account.cosmos.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.la.id
+
+  enabled_log {
+    category_group = "audit"
+  }
+
+  enabled_log {
+    category_group = "allLogs"
+  }
+}
+
 # --- Azure OpenAI Service (Cognitive Services) ---
 resource "azurerm_cognitive_account" "openai" {
   count               = var.param_use_existing_openai_instance ? 0 : 1 # Only create if not using existing
@@ -559,6 +683,24 @@ resource "azurerm_cognitive_account" "docintel" {
   tags                = local.common_tags
 }
 
+resource "azurerm_monitor_diagnostic_setting" "docintel_monitor" {
+  name = "diag-${azurerm_cognitive_account.docintel.name}"
+  target_resource_id = azurerm_cognitive_account.docintel.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.la.id
+
+  enabled_log {
+    category_group = "audit"
+  }
+
+  enabled_log {
+    category_group = "allLogs"
+  }
+
+  enabled_metric {
+    category = "AllMetrics"
+  }
+}
+
 # https://medium.com/expert-thinking/mastering-azure-search-with-terraform-a-how-to-guide-7edc3a6b1ee3
 # --- Azure AI Search Service ---
 resource "azurerm_search_service" "search" {
@@ -572,6 +714,23 @@ resource "azurerm_search_service" "search" {
   tags                = local.common_tags
 }
 
+resource "azurerm_monitor_diagnostic_setting" "search_monitor" {
+  name = "diag-${azurerm_search_service.search.name}"
+  target_resource_id = azurerm_search_service.search.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.la.id
+
+  enabled_log {
+    category_group = "audit"
+  }
+
+  enabled_log {
+    category_group = "allLogs"
+  }
+
+  enabled_metric {
+    category = "AllMetrics"
+  }
+}
 
 #########################################
 #
