@@ -284,8 +284,8 @@ resource "azurerm_linux_web_app" "app" {
 
   auth_settings_v2 {
     auth_enabled           = true
-    unauthenticated_action = "Return401"
-    #unauthenticated_action = "Return302"
+    #unauthenticated_action = "Return401"
+    unauthenticated_action = "Return302"
     require_authentication = true
     require_https          = true
 
