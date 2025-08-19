@@ -68,9 +68,12 @@ jobs:
         working-directory: ./deployers/terraform
 
       - name: Terraform Plan
-        run: terraform plan -out=tfplan -input=false
+        run: terraform plan -out=simplechat.tfplan -input=false
         working-directory: ./deployers/terraform
 
+      - name: Terraform Apply
+        run: terraform apply simplechat.tfplan -input=false
+        working-directory: ./deployers/terraform
 
 
 
