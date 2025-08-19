@@ -16,6 +16,9 @@ jobs:
       TFSTATE_STORAGE_ACCOUNT_NAME: ${{ vars.TFSTATE_STORAGE_ACCOUNT_NAME }}
       TFSTATE_STORAGE_CONTAINER: ${{ vars.TFSTATE_STORAGE_CONTAINER }}
 
+      acr_username: ${{ secrets.ACR_USERNAME }}
+      acr_password: ${{ secrets.ACR_PASSWORD }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -54,11 +57,9 @@ jobs:
           acr_resource_group_name = "${{ vars.ACR_RESOURCE_GROUP_NAME }}"
           image_name = "${{ vars.IMAGE_NAME }}"
           param_use_existing_openai_instance = ${{ vars.PARAM_USE_EXISTING_OPENAI_INSTANCE }}
-          param_existing_azure_openai_resource_name = "${{ vars.PARAM_EXISTING_OPENAI_RESOURCE_NAME }}"
-          param_existing_azure_openai_resource_group_name = "${{ vars.PARAM_EXISTING_OPENAI_RESOURCE_GROUP_NAME }}"
-          param_create_entra_security_groups = ${{ vars.CREATE_ENTRA_SECURITY_GROUPS }}
-          acr_username = "${{ secrets.ACR_USERNAME }}"
-          acr_password = "${{ secrets.ACR_PASSWORD }}"
+          param_existing_azure_openai_resource_name = "${{ vars.PARAM_EXISTING_AZURE_OPENAI_RESOURCE_NAME }}"
+          param_existing_azure_openai_resource_group_name = "${{ vars.PARAM_EXISTING_AZURE_OPENAI_RESOURCE_GROUP_NAME }}"
+          param_create_entra_security_groups = ${{ vars.PARAM_CREATE_ENTRA_SECURITY_GROUPS }}
           EOF
         shell: bash                
 
