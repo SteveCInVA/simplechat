@@ -31,10 +31,17 @@ az storage container create \
     --account-key $ACCOUNT_KEY
 
 # Assign 'Storage Blob Data Contributor' role to the calling user
-USER_OBJECT_ID=$(az ad signed-in-user show --query objectId -o tsv)
+echo "#############################"
+USER_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv)
+echo "USER_OBJECT_ID: $USER_OBJECT_ID"
+if [ -z "$USER_OBJECT_ID" ] && [ -n "$AZURE_CLIENT_ID" ]; then
+    echo "User object ID not found. Trying service principal lookup..."
+    USER_OBJECT_ID=$(az ad sp show --id "$AZURE_CLIENT_ID" --query id -o tsv)
+fi
+echo "#############################"
+
 az role assignment create \
-    --assignee-object-id $USER_OBJECT_ID \
-    --assignee-principal-type User \
+    --assignee $USER_OBJECT_ID \
     --role "Storage Blob Data Contributor" \
     --scope "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT"
 
