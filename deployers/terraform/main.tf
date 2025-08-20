@@ -84,7 +84,7 @@ locals {
   search_service_name         = "${var.param_base_name}-${var.param_environment}-search"
   storage_account_base        = "${var.param_base_name}${var.param_environment}sa"
   storage_account_name        = substr(replace(local.storage_account_base, "/[^a-z0-9]/", ""), 0, 24)
-  #acr_base_url                = "${var.acr_name}.azurecr.us" # Script has this hardcoded for US Gov
+  content_safety_name         = "${var.param_base_name}-${var.param_environment}-cs"
 
   param_registry_server   = var.global_which_azure_platform == "AzureUSGovernment" ? "https://${var.acr_name}.azurecr.us" : "https://${var.acr_name}.azurecr.io"
 
@@ -717,6 +717,36 @@ resource "azurerm_search_service" "search" {
 resource "azurerm_monitor_diagnostic_setting" "search_monitor" {
   name = "diag-${azurerm_search_service.search.name}"
   target_resource_id = azurerm_search_service.search.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.la.id
+  depends_on = [azurerm_search_service.search]
+
+  enabled_log {
+    category_group = "audit"
+  }
+
+  enabled_log {
+    category_group = "allLogs"
+  }
+
+  enabled_metric {
+    category = "AllMetrics"
+  }
+}
+
+resource "azurerm_cognitive_account" "content_safety" {
+  count              = var.param_deploy_content_safety_instance ? 1 : 0 # Only create if requested
+  name                = local.content_safety_name
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  kind                = "ContentSafety"
+  sku_name            = "S0" # Standard tier
+  tags                = local.common_tags
+}
+
+resource "azurerm_monitor_diagnostic_setting" "contentSafety_monitor" {
+  count              = var.param_deploy_content_safety_instance ? 1 : 0 # Only create if requested
+  name = "diag-${azurerm_cognitive_account.content_safety[count.index].name}"
+  target_resource_id = azurerm_cognitive_account.content_safety[count.index].id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.la.id
 
   enabled_log {

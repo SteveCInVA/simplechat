@@ -1,4 +1,3 @@
-
 variable "global_which_azure_platform" {
   description = "Set to 'AzureUSGovernment' for Azure Government, 'AzureCloud' for Azure Commercial."
   type        = string
@@ -34,7 +33,6 @@ variable "param_resource_owner_email_id" {
   type        = string
 }
 
-
 variable "param_environment" {
   description = "Environment identifier (e.g., dev, test, prod, uat)."
   type        = string
@@ -58,6 +56,12 @@ variable "acr_resource_group_name" {
 variable "image_name" {
   description = "Container image name (e.g., simple-chat:2025-05-15_7)."
   type        = string
+}
+
+variable "param_deploy_content_safety_instance" {
+  description = "Set to true to deploy content safety service."
+  type        = bool
+  default = true
 }
 
 variable "param_use_existing_openai_instance" {
