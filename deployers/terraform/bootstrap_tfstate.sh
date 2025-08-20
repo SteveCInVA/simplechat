@@ -4,7 +4,7 @@
 LOCATION="${TFSTATE_AZURE_LOCATION:-northcentralus}"
 RESOURCE_GROUP="${TFSTATE_RESOURCE_GROUP_NAME:-stecarrsimplechat-shared-rg}"
 STORAGE_ACCOUNT="${TFSTATE_STORAGE_ACCOUNT_NAME:-stecarrsimplechatstate01}"
-CONTAINER_NAME="${TFSTATE_STORAGE_CONTAINER:-localdev}"
+CONTAINER_NAME="${TFSTATE_STORAGE_CONTAINER:-local}"
 STATE_FILE="simplechat.terraform.tfstate"
 
 # Create the resource group
@@ -29,6 +29,14 @@ az storage container create \
     --name $CONTAINER_NAME \
     --account-name $STORAGE_ACCOUNT \
     --account-key $ACCOUNT_KEY
+
+# Assign 'Storage Blob Data Contributor' role to the calling user
+USER_OBJECT_ID=$(az ad signed-in-user show --query objectId -o tsv)
+az role assignment create \
+    --assignee-object-id $USER_OBJECT_ID \
+    --assignee-principal-type User \
+    --role "Storage Blob Data Contributor" \
+    --scope "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT"
 
 # Output backend config
 cat <<EOF > deployers/terraform/backend.config
