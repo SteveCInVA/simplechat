@@ -32,11 +32,11 @@ az storage container create \
 
 # Assign 'Storage Blob Data Contributor' role to the calling user
 echo "#############################"
-USER_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv)
+USER_OBJECT_ID=$(az ad sp show --id "$AZURE_CLIENT_ID" --query id -o tsv)
 echo "USER_OBJECT_ID: $USER_OBJECT_ID"
-if [ -z "$USER_OBJECT_ID" ] && [ -n "$AZURE_CLIENT_ID" ]; then
+if [ -z "$USER_OBJECT_ID" ] ; then
     echo "User object ID not found. Trying service principal lookup..."
-    USER_OBJECT_ID=$(az ad sp show --id "$AZURE_CLIENT_ID" --query id -o tsv)
+    USER_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv)
 fi
 echo "#############################"
 
