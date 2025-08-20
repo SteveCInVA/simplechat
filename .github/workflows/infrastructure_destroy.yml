@@ -1,0 +1,68 @@
+name: SimpleChat Infrastructure Destruction
+
+on:
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    env:
+      TFSTATE_AZURE_LOCATION: ${{ vars.TFSTATE_AZURE_LOCATION }}
+      TFSTATE_RESOURCE_GROUP_NAME: ${{ vars.TFSTATE_RESOURCE_GROUP_NAME }}
+      TFSTATE_STORAGE_ACCOUNT_NAME: ${{ vars.TFSTATE_STORAGE_ACCOUNT_NAME }}
+      TFSTATE_STORAGE_CONTAINER: ${{ vars.TFSTATE_STORAGE_CONTAINER }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Bootstrap script
+        run: |
+          chmod +x ./deployers/terraform/bootstrap_tfstate.sh
+          ./deployers/terraform/bootstrap_tfstate.sh
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.0
+
+      - name: Initialize Terraform
+        run: terraform init -backend-config=backend.config
+        working-directory: ./deployers/terraform
+
+      - name: Create dynamic tfvars file
+        run: |
+          cat > ./deployers/terraform/github.auto.tfvars <<EOF
+          global_which_azure_platform = "${{ vars.GLOBAL_WHICH_AZURE_PLATFORM }}"
+          param_subscription_id = "${{ vars.PARAM_SUBSCRIPTION_ID }}"
+          param_tenant_id = "${{ vars.PARAM_TENANT_ID }}"
+          param_location = "${{ vars.PARAM_LOCATION }}"
+          param_resource_owner_id = "${{ vars.PARAM_RESOURCE_OWNER_ID }}"
+          param_resource_owner_email_id = "${{ vars.PARAM_RESOURCE_OWNER_EMAIL_ID }}"
+          param_environment = "${{ vars.PARAM_ENVIRONMENT }}"
+          param_base_name = "${{ vars.PARAM_BASE_NAME }}"
+          acr_name = "${{ vars.ACR_NAME }}"
+          acr_resource_group_name = "${{ vars.ACR_RESOURCE_GROUP_NAME }}"
+          image_name = "${{ vars.IMAGE_NAME }}"
+          param_use_existing_openai_instance = ${{ vars.PARAM_USE_EXISTING_OPENAI_INSTANCE }}
+          param_existing_azure_openai_resource_name = "${{ vars.PARAM_EXISTING_AZURE_OPENAI_RESOURCE_NAME }}"
+          param_existing_azure_openai_resource_group_name = "${{ vars.PARAM_EXISTING_AZURE_OPENAI_RESOURCE_GROUP_NAME }}"
+          param_create_entra_security_groups = ${{ vars.PARAM_CREATE_ENTRA_SECURITY_GROUPS }}
+          acr_username = "${{ secrets.ACR_USERNAME }}"
+          acr_password = "${{ secrets.ACR_PASSWORD }}"
+
+          EOF
+        shell: bash                
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve
+        working-directory: ./deployers/terraform
+
+
+
